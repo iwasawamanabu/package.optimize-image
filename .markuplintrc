@@ -1,0 +1,30 @@
+{
+  "excludeFiles": [
+    "**/include/*.html"
+  ],
+  "extends": [
+    "markuplint:recommended"
+  ],
+  "parser": {
+    ".mustache$|.hbs$": "@markuplint/mustache-parser"
+  },
+  "rules": {
+    "character-reference": false,
+    "permitted-contents": false,
+    "required-h1": false,
+    "end-tag": false,
+    "attr-value-quotes": "double"
+  },
+  "nodeRules": [
+    {
+      "selector": "head",
+      "rules": {
+        "required-element": {
+          "options": {
+            "ignoreHasMutableContents": true
+          }
+        }
+      }
+    }
+  ]
+}

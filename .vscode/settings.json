@@ -1,0 +1,67 @@
+{
+  // Set the default
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": false,
+  // javascript
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[json][jsonc]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "vscode.json-language-features",
+  },
+  //stylelint
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.stylelint": "explicit"
+  },
+  "stylelint.validate": [
+    "scss"
+  ],
+  "[scss]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  // html
+  "[html]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  // 直前に改行を1つ入れるタグの、コンマで区切られたリスト
+  "html.format.extraLiners": "",
+  // 再フォーマットしてはならないタグの、コンマ区切りの一覧。'null'の場合、既定で https://www.w3.org/TR/html5/dom.html#phrasing-content にリストされているすべてのタグになります。
+  "html.format.unformatted": "svg",
+  // 1行あたりの最大文字数 (0=無効にする)。
+  "html.format.wrapLineLength": 0,
+  //replacerules
+  "replacerules.rules": {
+    "Reg Replace: PX to REM": {
+      "find": "([+-]?\\d*\\.?\\d+\\.?(?!\\d))px",
+      "replace": "global.pxrem($1)"
+    },
+    "Reg Replace: REM to VW for md": {
+      "find": "global.pxrem\\(([+-]?\\d*\\.?\\d+\\.?(?!\\d))\\)",
+      "replace": "global.pxvw($1,map-get(global.$grid-breakpoints,lg))"
+    },
+    "Reg Replace: REM to VW for SmallScreen@PC": {
+      "find": "global.pxrem\\(([+-]?\\d*\\.?\\d+\\.?(?!\\d))\\)",
+      "replace": "global.pxvw($1,global.$breakpoint-small-pc)"
+    },
+    "Reg Replace: PX to VW": {
+      "find": "([+-]?\\d*\\.?\\d+\\.?(?!\\d))px",
+      "replace": "global.pxvw($1)"
+    },
+    "Reg Replace: PX to VW for SmallScreen@PC": {
+      "find": "([+-]?\\d*\\.?\\d+\\.?(?!\\d))px",
+      "replace": "global.pxvw($1,global.$breakpoint-small-pc)"
+    },
+    "Reg Replace: REM to VW": {
+      "find": "pxrem",
+      "replace": "pxvw"
+    },
+  }
+}
