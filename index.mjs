@@ -12,11 +12,7 @@ const argv = process.argv.slice(2);
 -----------------------------------------------------------------*/
 export const optimizeImages = async () => {
   try {
-    if (argv.length === 0) {
-      console.log('Image optimization started!');
-    } else {
-      // console.log('Delete non-existent files ', argv);
-    }
+    if (argv.length === 0) console.log('Image optimization started!');
     const ts_start = Date.now();
     const config = await getConfig();
     const imageFileList = await getImageFileList(config, argv);

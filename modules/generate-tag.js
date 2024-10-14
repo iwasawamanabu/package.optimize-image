@@ -30,7 +30,10 @@ export const generateTag = async (config, fileList) => {
 
       //
       const tag = createImageTag(file, spFile, options);
-      result.push(tag);
+      result.push({
+        name: file.fileName,
+        code: tag,
+      });
     }
     return result;
   } catch (error) {
