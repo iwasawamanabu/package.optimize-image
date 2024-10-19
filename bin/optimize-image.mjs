@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { optimizeImages } from '../index.mjs';
 (async () => {
   const result = await optimizeImages();

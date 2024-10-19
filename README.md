@@ -22,8 +22,8 @@ src/assets/img/に大元の画像を配置して、public/assets/imgに書き出
 ## add scripts
 
 ```
-"optimize:images": "node node_modules/.bin/optimizeImages",
-"optimize:watch": "onchange \"src/assets/img/**/*.*\" -- node node_modules/.bin/optimizeImages {{changed}}"
+"optimize:images": "optimizeImages",
+"optimize:watch": "onchange \"src/template/lp/assets/img/**/*.*\" -- optimizeImages {{changed}}"
 ```
 
 ## config file
