@@ -6,25 +6,53 @@ Image Optimization
 npm install @lf-dev/optimize-image -D
 ```
 
-## overview
-src/assets/img/に大元の画像を配置して、public/assets/imgに書き出します。
-※ディレクトリは設定ファイルで変更可能です。
-
- - 画像の圧縮
- - WebP画像の書き出し
- - Avif画像の書き出し
- - レスポンシブ画像の書き出し
- - 貼り付け用のコード生成（元画像を縮小して生成）
-    - _pc,_spという接尾語をファイル名に付与してpc/sp切り替え用のコードを生成します
-    - @3xという接尾語をファイル名に付与すると@2x,@1xの画像を書き出してコードを生成します
-    - @2xという接尾語をファイル名に付与すると@1xの画像を書き出してコードを生成します
-
 ## add scripts
 
 ```
 "optimize:images": "optimizeImages",
 "optimize:watch": "onchange \"src/template/lp/assets/img/**/*.*\" -- optimizeImages {{changed}}"
 ```
+
+### src内の画像を一括書き出し
+```
+npm run optimize:images
+```
+ - 一括書き出し後、Snippets Viewerが立ち上がります
+
+### 特定の画像のみ画像を生成
+```
+npm run optimize:images -- src/assets/img/kv/img-kv01.jpg
+```
+ - -- ダブルハイフンの後に画像のパスを引数として指定  
+（複数ファイルの場合には半角で区切る）
+ - スニペットの更新は行われません
+
+### src/assets/img/内の変更を検知し、画像の自動書き出し
+```
+npm run optimize:watch
+```
+ - ※未検証
+ - スニペットの更新は行われません
+ - onchangeのpackageが必要```npm i onchange -D```
+
+
+## overview
+
+### input → output
+src/assets/img/に大元の画像を配置して、   
+public/assets/imgに書き出します。  
+※ディレクトリは設定ファイルで変更可能です。
+
+### 機能
+ - 画像の圧縮
+ - WebP画像の書き出し
+ - Avif画像の書き出し
+ - レスポンシブ画像の書き出し
+    - _pc,_spという接尾語をファイル名に付与し、pc/sp切り替え用のコードを生成します
+    - @3xという接尾語をファイル名に付与すると@2x,@1xの画像を書き出してコードを生成します
+    - @2xという接尾語をファイル名に付与すると@1xの画像を書き出してコードを生成します
+
+
 
 ## config file
 .optimizeImagesrc.mjs
@@ -102,22 +130,13 @@ export default {
 ```
 
 
-## add scripts
-
-```
-npm run optimize:images
-```
-srcディレクトリ内の画像を一括書き出し、スニペット用のViewerが立ち上がります
-
-```
-npm run optimize:images -- src/assets/img/kv/img-kv01.jpg
-```
--- ダブルハイフンの後に画像のパスを指定（複数ファイルの場合には半角で区切る）することで、
-特定の画像のみ画像を生成できます。（スニペットの更新は行われません）
-
-```
-npm run optimize:watch
-```
-src/assets/img/内の変更を検知し、画像の書き出しを自動的に行います（※調整＆検証中）
-（スニペットの更新は行われません）
-
+## TODO
+ - デフォルトのOption設定 ※wip
+ - Snippets Viewerのデザインブラッシュアップ ※wip
+ - 絞り込み → 絞り込み結果の「All Copy」 ※wip
+ - モーダル内に画像の全体表示
+   - 元画像と形式ごとの画質比較チェック（容量も）
+ - watch時にもスニペットを更新
+ - 生成コードをオプションで切り替え（avif offとか）
+ - リファクタリング + Snippets Viewerをフレームワークを使ってちゃんと作る
+ - 生成AIを使用してAltを自動生成するボタンを追加？（自身のAPI Keyを入力）
