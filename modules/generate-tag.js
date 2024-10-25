@@ -35,6 +35,7 @@ export const generateTag = async (config, fileList) => {
         code: tag,
       });
     }
+
     return result;
   } catch (error) {
     console.error(`[generateTag] ${error}`);
@@ -59,7 +60,7 @@ function checkForInclude(str, suffix) {
 -----------------------------------------------------------------*/
 function getSearchTerm(input, fromStr, toStr) {
   // 最後の@より前の部分を取得
-  const beforeLastAt = input.split('@').slice(0, -1).join('@');
+  const beforeLastAt = input.split('@').slice(0, -1).join('@') || input;
   // fromStrをtoStrに置換するための正規表現を動的に作成
   const regex = new RegExp(`(.*)${fromStr}`, 'g');
   // 最後のfromStrをtoStrに置換
@@ -79,7 +80,7 @@ function findSpFile(pcFile, fileList, options) {
 -----------------------------------------------------------------*/
 function createImageTag(file, spFile, options) {
   const { WebP, Avif, breakpoint } = options;
-  const mediaQuery = `(max-width: ${breakpoint - 0.02}px)`;
+  const mediaQuery = `(max-width:${breakpoint - 0.02}px)`;
   const sources = [];
 
   //
@@ -92,6 +93,29 @@ function createImageTag(file, spFile, options) {
       if (Avif) sources.push(createSourceTag(file, 'avif'));
       if (WebP) sources.push(createSourceTag(file, 'webp'));
     }
+
+    // sort.
+    sources.sort((a, b) => {
+      // mediaの有無を比較（mediaがある方が優先）
+      const hasMediaA = a.includes(mediaQuery);
+      const hasMediaB = b.includes(mediaQuery);
+
+      if (hasMediaA !== hasMediaB) {
+        return hasMediaA ? -1 : 1;
+      }
+
+      // typeの優先順位を判定する関数
+      const getTypePriority = (source) => {
+        if (source.includes('type="image/avif"')) return 0;
+        if (source.includes('type="image/webp"')) return 1;
+        return 2;
+      };
+
+      const priorityA = getTypePriority(a);
+      const priorityB = getTypePriority(b);
+
+      return priorityA - priorityB;
+    });
   }
 
   //
