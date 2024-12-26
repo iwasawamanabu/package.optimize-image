@@ -84,39 +84,37 @@ function createImageTag(file, spFile, options) {
   const sources = [];
 
   //
-  if (file.fileExtension !== 'svg') {
-    if (spFile) {
-      if (Avif) sources.push(...createSourceTags(file, spFile, 'avif', mediaQuery));
-      if (WebP) sources.push(...createSourceTags(file, spFile, 'webp', mediaQuery));
-      sources.push(...createSourceTags(file, spFile, file.fileExtension, mediaQuery));
-    } else {
-      if (Avif) sources.push(createSourceTag(file, 'avif'));
-      if (WebP) sources.push(createSourceTag(file, 'webp'));
+  if (spFile) {
+    if (Avif && file.fileExtension !== 'svg') sources.push(...createSourceTags(file, spFile, 'avif', mediaQuery));
+    if (WebP && file.fileExtension !== 'svg') sources.push(...createSourceTags(file, spFile, 'webp', mediaQuery));
+    sources.push(...createSourceTags(file, spFile, file.fileExtension, mediaQuery));
+  } else {
+    if (Avif && file.fileExtension !== 'svg') sources.push(createSourceTag(file, 'avif'));
+    if (WebP && file.fileExtension !== 'svg') sources.push(createSourceTag(file, 'webp'));
+  }
+
+  // sort.
+  sources.sort((a, b) => {
+    // mediaの有無を比較（mediaがある方が優先）
+    const hasMediaA = a.includes(mediaQuery);
+    const hasMediaB = b.includes(mediaQuery);
+
+    if (hasMediaA !== hasMediaB) {
+      return hasMediaA ? -1 : 1;
     }
 
-    // sort.
-    sources.sort((a, b) => {
-      // mediaの有無を比較（mediaがある方が優先）
-      const hasMediaA = a.includes(mediaQuery);
-      const hasMediaB = b.includes(mediaQuery);
+    // typeの優先順位を判定する関数
+    const getTypePriority = (source) => {
+      if (source.includes('type="image/avif"')) return 0;
+      if (source.includes('type="image/webp"')) return 1;
+      return 2;
+    };
 
-      if (hasMediaA !== hasMediaB) {
-        return hasMediaA ? -1 : 1;
-      }
+    const priorityA = getTypePriority(a);
+    const priorityB = getTypePriority(b);
 
-      // typeの優先順位を判定する関数
-      const getTypePriority = (source) => {
-        if (source.includes('type="image/avif"')) return 0;
-        if (source.includes('type="image/webp"')) return 1;
-        return 2;
-      };
-
-      const priorityA = getTypePriority(a);
-      const priorityB = getTypePriority(b);
-
-      return priorityA - priorityB;
-    });
-  }
+    return priorityA - priorityB;
+  });
 
   //
   const img = createImgTag(file, options);
