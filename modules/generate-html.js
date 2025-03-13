@@ -27,6 +27,11 @@ export const generateHTML = async (config, tags) => {
     .dataTable-container thead{display: none;}
     .dataTable-top{padding: 0;}
     .dataTable-bottom {margin-top: auto;position: absolute;bottom: 0;left:0;right:0;margin-inline: auto;}
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -110,11 +115,57 @@ export const generateHTML = async (config, tags) => {
         }
 
     function positionSearchInput() {
-    const searchInput = document.querySelector('.dataTable-input');
-    if (searchInput) {
-        searchInput.classList.add('fixed', 'top-4', 'right-4');
+      const searchInput = document.querySelector('.dataTable-input');
+      if (searchInput) {
+        const searchContainer = document.createElement('div');
+        searchContainer.classList.add('search-container', 'fixed', 'top-4', 'right-4');
+        
+        // Create All Copy button
+        const allCopyBtn = document.createElement('button');
+        allCopyBtn.id = 'allCopyBtn';
+        allCopyBtn.classList.add('px-3', 'py-1', 'bg-blue-500', 'text-white', 'rounded');
+        allCopyBtn.textContent = 'All Copy';
+        
+        // Get the parent of the search input
+        const parent = searchInput.parentNode;
+        
+        // Move the search input to our new container
+        searchContainer.appendChild(searchInput);
+        searchContainer.appendChild(allCopyBtn);
+        
+        // Add the new container to the parent
+        parent.appendChild(searchContainer);
+        
+        // Add event listener to All Copy button
+        allCopyBtn.addEventListener('click', copyAllSnippets);
+      }
     }
-}
+
+    function copyAllSnippets() {
+      // Get all visible rows in the current view (handles filtered results too)
+      const visibleRows = Array.from(document.querySelectorAll('#snippetsTable tbody tr:not(.dataTable-hidden)'));
+      
+      if (visibleRows.length === 0) {
+        alert('No snippets to copy');
+        return;
+      }
+      
+      // Extract code from each visible row
+      const allCodes = visibleRows.map(row => {
+        const codeBtn = row.querySelector('.copy-btn');
+        return decodeURIComponent(codeBtn.dataset.code);
+      });
+      
+      // Join all codes with a blank line between each
+      const combinedCode = allCodes.join('\\n\\n');
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(combinedCode).then(() => {
+        showCopyNotification();
+      });
+    }
+
+
     function initializeDataTable() {
       if (dataTable) {
         dataTable.destroy();
