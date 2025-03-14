@@ -7,11 +7,19 @@ import { imageOptimize } from './modules/image-optimize.js';
 import { generateSnippets } from './modules/generate-snippets.js';
 //
 const argv = process.argv.slice(2);
+let browse = false;
 /* ----------------------------------------------------------------
  * 画像最適化
 -----------------------------------------------------------------*/
 export const optimizeImages = async () => {
   try {
+    //
+    if (argv.length > 0) {
+      browse = argv[0] === 'browse';
+      if (browse) argv.shift();
+    }
+
+    //
     if (argv.length === 0) console.log('Image optimization started!');
     const ts_start = Date.now();
     const config = await getConfig();
@@ -26,7 +34,9 @@ export const optimizeImages = async () => {
           throw err;
         } else {
           console.log('generate Snippets completed!');
-          open(config.snippetsOption.snippetsFilePath);
+          if (browse) {
+            open(config.snippetsOption.snippetsFilePath);
+          }
         }
       });
     }
