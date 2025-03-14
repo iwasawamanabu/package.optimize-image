@@ -478,6 +478,62 @@ export const generateHTML = async (config, tags) => {
         justify-content: space-between;
       }
     }
+      /* API Key Form Styles */
+#apiKeyFormContainer {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 50;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  max-width: 350px;
+  display: none;
+}
+
+#apiKeyForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#apiKeyForm label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+#apiKeyForm input {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: white;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+#apiKeyForm input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+#apiKeyForm button {
+  padding: 0.5rem 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#apiKeyForm button:hover {
+  background-color: #2563eb;
+}
   </style>
 </head>
 <body>
@@ -564,6 +620,7 @@ export const generateHTML = async (config, tags) => {
                   </div>
                 </div>
                 <div class="flex justify-end mt-3">
+                  <button id="generateALT" class="shadcn-button shadcn-button-primary mr-3" style="display: none;">ALT生成</button>
                   <button id="copyCode" class="shadcn-button shadcn-button-primary">コピー</button>
                 </div>
               </div>
@@ -578,6 +635,20 @@ export const generateHTML = async (config, tags) => {
     コードをクリップボードにコピーしました！
   </div>
 
+  <!-- API Key Form Container -->
+<div id="apiKeyFormContainer">
+  <form id="apiKeyForm">
+    <label for="apiKeyInput">OpenAI API Key</label>
+    <input 
+      type="password" 
+      id="apiKeyInput" 
+      placeholder="sk-..." 
+      autocomplete="off"
+    >
+    <button type="submit">保存</button>
+  </form>
+</div>
+
   <script>
     // データをJSONとして安全に取り込む
     const tableData = ${tagsJsonString};
@@ -588,6 +659,7 @@ export const generateHTML = async (config, tags) => {
     const codeContent = document.getElementById('codeContent');
     const closeModal = document.getElementById('closeModal');
     const copyCode = document.getElementById('copyCode');
+    const generateALT = document.getElementById('generateALT');
     const sortByNameBtn = document.getElementById('sortByName');
     const copyNotification = document.getElementById('copyNotification');
     const perPageSelect = document.getElementById('perPage');
@@ -1030,24 +1102,27 @@ export const generateHTML = async (config, tags) => {
     }
 
     // Show modal with code and image preview
-    function showModal(name, code) {
-      // オリジナルのコードを保存
-      currentCode = code;
-      
-      // コードを表示
-      updateCodeDisplay();
-      
-      // Parse image sources from the code
-      const imageSources = parseImageSources(code);
-      
-      // Create image preview
-      createImagePreview(previewContainer, imageSources);
-      
-      // チェックボックスの表示/非表示を設定
-      setupOptionCheckboxes(imageSources);
-      
-      codeModal.classList.remove('hidden');
-    }
+function showModal(name, code) {
+  // オリジナルのコードを保存
+  currentCode = code;
+  
+  // コードを表示
+  updateCodeDisplay();
+  
+  // Parse image sources from the code
+  const imageSources = parseImageSources(code);
+  
+  // Create image preview
+  createImagePreview(previewContainer, imageSources);
+  
+  // チェックボックスの表示/非表示を設定
+  setupOptionCheckboxes(imageSources);
+  
+  // Update generateALT button visibility based on API key
+  updateGenerateAltButton();
+  
+  codeModal.classList.remove('hidden');
+}
     
     // コード表示を更新する関数
     function updateCodeDisplay() {
@@ -1125,14 +1200,12 @@ export const generateHTML = async (config, tags) => {
     
     // コードを整形する関数（余分な空白行を削除）
     function cleanupCode(html) {
-    console.log('claenupCode');
+
       try {
         // 単純なテキスト置換でインデントや空白行を処理
         let result = html;
-        console.log(result);
-        // 余分な空白を削除（空白行問題の解決）
 
-        
+        // 余分な空白を削除（空白行問題の解決）
         result = encodeURIComponent(result);
         result = result.replaceAll('%20%20%0A', '');
         result = decodeURIComponent(result);
@@ -1271,6 +1344,173 @@ export const generateHTML = async (config, tags) => {
     perPageSelect.addEventListener('change', (e) => {
       initializeDataTable();
     });
+
+
+
+    // API Key 関連の要素
+const apiKeyFormContainer = document.getElementById('apiKeyFormContainer');
+const apiKeyForm = document.getElementById('apiKeyForm');
+const apiKeyInput = document.getElementById('apiKeyInput');
+
+let userApiKey = ''; // ユーザーのAPI Key
+
+// Check if protocol is http or https
+function isWebProtocol() {
+  return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+}
+
+// Show API Key form if protocol is http or https
+function showApiKeyFormIfNeeded() {
+  if (isWebProtocol()) {
+    apiKeyFormContainer.style.display = 'block';
+    
+    // Try to load API key from localStorage
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      apiKeyInput.value = savedApiKey;
+      userApiKey = savedApiKey;
+      updateGenerateAltButton();
+    }
+  } else {
+    apiKeyFormContainer.style.display = 'none';
+  }
+}
+
+// Handle API Key form submission
+apiKeyForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  userApiKey = apiKeyInput.value.trim();
+  
+  // Save to localStorage if it's a valid API key
+  if (userApiKey.startsWith('sk-')) {
+    localStorage.setItem('openai_api_key', userApiKey);
+  }
+  
+  updateGenerateAltButton();
+});
+
+// Update the visibility of the ALT generation button based on API key
+function updateGenerateAltButton() {
+  if (userApiKey && userApiKey.trim() !== '') {
+    generateALT.style.display = 'block';
+  } else {
+    generateALT.style.display = 'none';
+  }
+}
+
+
+    generateALT.addEventListener('click', async function () {
+      const imgElement = previewContainer.querySelector('img');
+
+      // Base64に変換
+      const base64Image = await ImageToBase64(imgElement, "image/jpeg");
+
+      try {
+        // OpenAI APIリクエスト
+        const altText = await generateAltText(base64Image);
+        
+        // JSONからalt属性のテキストを抽出
+        let altTextContent = "";
+        try {
+        
+          const jsonResponse = JSON.parse(altText);
+          console.log(altText,jsonResponse);
+          altTextContent = jsonResponse.alt;
+        } catch (e) {
+          // JSON解析に失敗した場合はそのまま表示
+          altTextContent = altText;
+        }
+
+        // コードを更新
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(currentCode, 'text/html');
+        const imgs = doc.querySelectorAll('img');
+        
+        if (imgs.length > 0) {
+          // 最初のimg要素にalt属性を設定
+          imgs[0].setAttribute('alt', altTextContent);
+          
+          // 更新されたコードを保存
+          currentCode = doc.body.innerHTML;
+          
+          // 表示を更新
+          updateCodeDisplay();
+          
+          // 通知
+          showCopyNotification();
+        }
+      } catch (error) {
+        console.error('ALT生成エラー:', error);
+        alert('ALTの生成に失敗しました。API KEYを確認してください。');
+      }
+    });
+
+  
+
+
+    // 画像URLをBase64に変換
+    async function ImageToBase64(image, mime_type) {
+
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+      canvas.width = 640
+      canvas.height = (640 * image.height) / image.width
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+  
+      return canvas.toDataURL(mime_type);
+
+    }
+
+    // OpenAI APIリクエスト
+    async function generateAltText(base64Image) {
+      // ユーザーのAPI Keyを使用
+      if (!userApiKey) {
+        throw new Error('API Keyが設定されていません');
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + userApiKey
+        },
+        body: JSON.stringify({
+          "model": "gpt-4o",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "私はWebデザイナーです。imgタグを使ってホームページで添付の画像を紹介しようと思ったのですが、alt属性に何を書けば良いかわかりません。\\nWCAGのガイドラインに沿って、「写真」「様子」「風景」など、画像の内容を簡潔な言葉で説明してください。\\n説明は以下のフォーマットで紹介してください。{\\"alt\\":\\"画像の説明\\"}"
+                },
+                {
+                  "type": "text",
+                  "text": "商品を紹介する画像です"
+                },
+                {
+                  "type": "image_url",
+                  "image_url": {
+                      "url": base64Image
+                  }
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      console.log(data);
+      return data.choices?.[0]?.message?.content || "ALTテキスト生成に失敗しました";
+    }
+
+    // Initialize on page load
+window.addEventListener('DOMContentLoaded', () => {
+  showApiKeyFormIfNeeded();
+});
+
+
   </script>
 </body>
 </html>`;
