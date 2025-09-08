@@ -1,5 +1,6 @@
 import { glob } from 'glob';
 import path from 'path';
+
 /* ----------------------------------------------------------------
  * 画像ファイルリストの取得
 -----------------------------------------------------------------*/
@@ -10,7 +11,9 @@ export const getImageFileList = async (config, argv) => {
     if (argv.length > 0) {
       imageFileList = argv;
     } else {
-      imageFileList = await glob(config.inputImageDir + '/**/*.*');
+      // Windows対応: globパターンを正規化
+      const globPattern = path.join(config.inputImageDir, '**', '*.*').replace(/\\/g, '/');
+      imageFileList = await glob(globPattern);
     }
     if (imageFileList.length === 0) {
       throw new Error('File not found!');

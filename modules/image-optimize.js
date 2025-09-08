@@ -8,6 +8,7 @@ import sizeOf from 'image-size';
 import { imageCompress } from './image-compress.js';
 import { animateProcessing } from './animate-processing.js';
 import { highlight } from './console-highlight.js';
+
 /* ----------------------------------------------------------------
  * 画像最適化
 -----------------------------------------------------------------*/
@@ -27,43 +28,64 @@ export const imageOptimize = async (config, imageFileList, argv) => {
       /* 該当ファイルがない場合は削除
       -------------------------------------------------- */
       if (!fs.existsSync(file)) {
+        // Windows対応: パスを正規化
+        const normalizedInputDir = path.normalize(config.inputImageDir);
+        const normalizedOutputDir = path.normalize(config.outputImageDir);
+        const normalizedFile = path.normalize(file);
+
         const deleteFile = {};
-        deleteFile.file = file.replace(config.inputImageDir, config.outputImageDir);
+        deleteFile.file = normalizedFile.replace(normalizedInputDir, normalizedOutputDir);
         deleteFile.fileLabel = path.basename(file, path.extname(file)); // ファイル名を取得
         deleteFile.fileExtension = path.extname(file).replace('.', ''); // ファイルの拡張子を取得
         deleteFile.resolutionScaling = deleteFile.fileLabel.includes('@3x') ? '@3x' : deleteFile.fileLabel.includes('@2x') ? '@2x' : '';
-        //
-        fs.unlinkSync(deleteFile.file);
+
+        // ファイルが存在する場合のみ削除
+        if (fs.existsSync(deleteFile.file)) {
+          fs.unlinkSync(deleteFile.file);
+        }
 
         if (deleteFile.fileExtension != 'svg') {
           if (config.resolutionScaling && deleteFile.resolutionScaling === '@3x') {
-            fs.unlinkSync(deleteFile.file.replace('@3x', '@2x'));
-            fs.unlinkSync(deleteFile.file.replace('@3x', '@1x'));
+            const file2x = deleteFile.file.replace('@3x', '@2x');
+            const file1x = deleteFile.file.replace('@3x', '@1x');
+            if (fs.existsSync(file2x)) fs.unlinkSync(file2x);
+            if (fs.existsSync(file1x)) fs.unlinkSync(file1x);
           } else if (config.resolutionScaling && deleteFile.resolutionScaling === '@2x') {
-            fs.unlinkSync(deleteFile.file.replace('@2x', '@1x'));
+            const file1x = deleteFile.file.replace('@2x', '@1x');
+            if (fs.existsSync(file1x)) fs.unlinkSync(file1x);
           }
 
           // WebP
           if (config.WebP) {
             deleteFile.fileWebP = deleteFile.file.replace(`.${deleteFile.fileExtension}`, '.webp');
-            fs.unlinkSync(deleteFile.fileWebP);
+            if (fs.existsSync(deleteFile.fileWebP)) {
+              fs.unlinkSync(deleteFile.fileWebP);
+            }
             if (config.resolutionScaling && deleteFile.resolutionScaling === '@3x') {
-              fs.unlinkSync(deleteFile.fileWebP.replace('@3x', '@2x'));
-              fs.unlinkSync(deleteFile.fileWebP.replace('@3x', '@1x'));
+              const webp2x = deleteFile.fileWebP.replace('@3x', '@2x');
+              const webp1x = deleteFile.fileWebP.replace('@3x', '@1x');
+              if (fs.existsSync(webp2x)) fs.unlinkSync(webp2x);
+              if (fs.existsSync(webp1x)) fs.unlinkSync(webp1x);
             } else if (config.resolutionScaling && deleteFile.resolutionScaling === '@2x') {
-              fs.unlinkSync(deleteFile.fileWebP.replace('@2x', '@1x'));
+              const webp1x = deleteFile.fileWebP.replace('@2x', '@1x');
+              if (fs.existsSync(webp1x)) fs.unlinkSync(webp1x);
             }
           }
 
           // Avif
           if (config.Avif) {
             deleteFile.fileAvif = deleteFile.file.replace(`.${deleteFile.fileExtension}`, '.avif');
-            fs.unlinkSync(deleteFile.fileAvif);
+            if (fs.existsSync(deleteFile.fileAvif)) {
+              fs.unlinkSync(deleteFile.fileAvif);
+            }
             if (config.resolutionScaling && deleteFile.resolutionScaling === '@3x') {
-              fs.unlinkSync(deleteFile.fileAvif.replace('@3x', '@2x'));
-              fs.unlinkSync(deleteFile.fileAvif.replace('@3x', '@1x'));
+              const avif2x = deleteFile.fileAvif.replace('@3x', '@2x');
+              const avif1x = deleteFile.fileAvif.replace('@3x', '@1x');
+              if (fs.existsSync(avif2x)) fs.unlinkSync(avif2x);
+              if (fs.existsSync(avif1x)) fs.unlinkSync(avif1x);
             } else if (config.resolutionScaling && deleteFile.resolutionScaling === '@2x') {
-              fs.unlinkSync(deleteFile.fileAvif.replace('@2x', '@1x'));
+              const avif1x = deleteFile.fileAvif.replace('@2x', '@1x');
+              if (fs.existsSync(avif1x)) fs.unlinkSync(avif1x);
             }
           }
         }
@@ -81,10 +103,19 @@ export const imageOptimize = async (config, imageFileList, argv) => {
       fileinfo.fileExtension = sizeinfo.type; // ファイルの拡張子を取得
       fileinfo.width = sizeinfo.width; // 画像の幅
       fileinfo.height = sizeinfo.height; // 画像の高さ
-      fileinfo.fileDir = path.dirname(file).replace(config.inputImageDir, ''); // ファイルのディレクトリを取得
+
+      // Windows対応: パスの正規化とディレクトリの取得
+      const normalizedFile = path.normalize(file);
+      const normalizedInputDir = path.normalize(config.inputImageDir);
+      const relativePath = path.relative(normalizedInputDir, path.dirname(normalizedFile));
+
+      // Windows対応: バックスラッシュをスラッシュに変換（URLパス用）
+      fileinfo.fileDir = relativePath === '.' ? '' : '/' + relativePath.replace(/\\/g, '/');
+
       fileinfo.fileName = `${fileinfo.fileLabel}.${fileinfo.fileExtension}`; // ファイル名と拡張子を結合
       fileinfo.resolutionScaling = fileinfo.fileLabel.includes('@3x') ? '@3x' : fileinfo.fileLabel.includes('@2x') ? '@2x' : '';
-      fileinfo.publishDir = `${config.outputImageDir}${fileinfo.fileDir}`; // 出力先のディレクトリ
+      fileinfo.publishDir = path.join(config.outputImageDir, relativePath); // 出力先のディレクトリ（Windows対応）
+
       //
       const processID = `[${progress}/${imgLength}]`;
       const processLabel = `${fileinfo.fileName}`;
