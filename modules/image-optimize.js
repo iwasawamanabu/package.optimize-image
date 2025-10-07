@@ -110,7 +110,7 @@ export const imageOptimize = async (config, imageFileList, argv) => {
       const relativePath = path.relative(normalizedInputDir, path.dirname(normalizedFile));
 
       // Windows対応: バックスラッシュをスラッシュに変換（URLパス用）
-      fileinfo.fileDir = relativePath === '.' ? '' : '/' + relativePath.replace(/\\/g, '/');
+      fileinfo.fileDir = relativePath === '.' ? '' : '' + relativePath.replace(/\\/g, '/');
 
       fileinfo.fileName = `${fileinfo.fileLabel}.${fileinfo.fileExtension}`; // ファイル名と拡張子を結合
       fileinfo.resolutionScaling = fileinfo.fileLabel.includes('@3x') ? '@3x' : fileinfo.fileLabel.includes('@2x') ? '@2x' : '';
