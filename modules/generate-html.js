@@ -11,7 +11,7 @@ export const generateHTML = async (config, tags) => {
       return {
         image: tag.code.replaceAll(config.snippetsOption.path, config.snippetsOption.public + config.snippetsOption.path),
         name: tag.name,
-        code: tag.code,
+        code: tag.code.replaceAll('//', '/'),
       };
     });
 
